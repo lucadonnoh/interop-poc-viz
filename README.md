@@ -31,12 +31,32 @@ The visualization displays 9,431 valid interop transfers across 10 different tok
 5. **Reset**: Use the home icon in the toolbar to reset the view
 6. **Hover**: Move your mouse over points to see detailed information
 
+## Updating the Data
+
+To update the visualization with new data:
+
+1. Replace `interop.csv` with your new CSV file
+2. Commit and push to the main branch:
+   ```bash
+   git add interop.csv
+   git commit -m "Update interop data"
+   git push
+   ```
+3. GitHub Actions will automatically regenerate the visualization
+4. The updated site will be live in a few minutes
+
+You can also manually regenerate the visualization locally:
+```bash
+python generate_visualization.py
+```
+
 ## Technical Details
 
 Built with:
 - Python (pandas, plotly)
 - Plotly.js for interactive visualization
 - GitHub Pages for hosting
+- GitHub Actions for automatic updates
 
 ## Data Insights
 
