@@ -62,7 +62,7 @@ for idx, token in enumerate(unique_tokens):
 
 # Update layout for better appearance
 fig.update_layout(
-    title='Interop Transfers: USD Value vs Duration by Token (Interactive)<br><sub>Click legend items to show/hide tokens</sub>',
+    title='Across Protocol Interop Transfers: USD Value vs Duration by Token<br><sub>Click legend items to show/hide tokens</sub>',
     width=1400,
     height=800,
     hovermode='closest',

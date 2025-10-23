@@ -1,6 +1,6 @@
-# Interop POC Visualization
+# Across Interop Visualization
 
-Interactive visualization of interop transfer data showing the relationship between USD value and duration across different token types.
+Interactive visualization of [Across Protocol](https://across.to/) interop transfer data, showing the relationship between USD value and duration across different token types.
 
 ## Features
 
@@ -16,7 +16,7 @@ Visit the live site: [GitHub Pages URL will be here after deployment]
 
 ## Data
 
-The visualization displays 9,431 valid interop transfers across 10 different token types:
+The visualization displays 9,431 valid Across Protocol interop transfers across 10 different token types:
 - USDC (circle) - 2,565 transfers
 - ETH (ethereum) - 6,469 transfers
 - USDT (tether) - 330 transfers
