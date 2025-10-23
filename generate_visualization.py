@@ -41,7 +41,7 @@ for idx, token in enumerate(unique_tokens):
     else:
         opacity = 0.25
 
-    fig.add_trace(go.Scatter(
+    fig.add_trace(go.Scattergl(  # WebGL for better performance
         x=token_data['srcValueUsd'],
         y=token_data['duration'],
         mode='markers',
