@@ -1195,6 +1195,9 @@ html_content = f"""<!DOCTYPE html>
             min-height: 600px;
             padding-bottom: 40px;
         }}
+        .plugin-nav {{
+            overflow-x: auto;
+        }}
 
         /* Responsive design for tablets and smaller */
         @media (max-width: 1200px) {{
@@ -1222,29 +1225,77 @@ html_content = f"""<!DOCTYPE html>
                 gap: 8px;
             }}
             .stat {{
-                padding: 10px 12px;
+                padding: 8px 10px;
             }}
             .stat-value {{
                 font-size: 16px;
             }}
+            .stat-label {{
+                font-size: 9px;
+            }}
+            .stat-sub {{
+                font-size: 9px;
+            }}
             .header h1 {{
-                font-size: 16px;
+                font-size: 15px;
+                letter-spacing: 1px;
             }}
             .header .timestamp {{
-                font-size: 10px;
+                font-size: 9px;
             }}
             .chart-container {{
                 padding: 10px;
+                margin-bottom: 10px;
+            }}
+            .chart-container.sankey {{
+                min-height: 400px;
+            }}
+            .grid {{
+                gap: 10px;
+                margin-bottom: 10px;
+            }}
+            .plugin-nav {{
+                padding: 15px;
+                margin-top: 20px;
+            }}
+            .plugin-nav h2 {{
+                font-size: 12px;
+                margin-bottom: 10px;
             }}
         }}
 
         /* Responsive design for very small mobile */
         @media (max-width: 480px) {{
+            body {{
+                padding: 8px;
+                font-size: 11px;
+            }}
             .stats-bar {{
                 grid-template-columns: 1fr;
+                gap: 6px;
+            }}
+            .stat {{
+                padding: 8px;
             }}
             .stat-value {{
                 font-size: 14px;
+            }}
+            .stat-label {{
+                font-size: 8px;
+            }}
+            .header h1 {{
+                font-size: 14px;
+            }}
+            .chart-container {{
+                padding: 8px;
+            }}
+            .plugin-nav {{
+                padding: 10px;
+                margin-top: 15px;
+            }}
+            .plugin-nav h2 {{
+                font-size: 11px;
+                margin-bottom: 8px;
             }}
         }}
     </style>
@@ -1344,9 +1395,9 @@ html_content = f"""<!DOCTYPE html>
         </div>
     </div>
 
-    <div style="margin-top: 30px; padding: 20px; background: {CARD_BG}; border: 1px solid {GRID_COLOR};">
+    <div style="margin-top: 30px; padding: 20px; background: {CARD_BG}; border: 1px solid {GRID_COLOR};" class="plugin-nav">
         <h2 style="color: {ACCENT_COLOR}; font-size: 14px; margin-bottom: 15px; letter-spacing: 2px;">PLUGIN DETAIL PAGES</h2>
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;">
             __PLUGIN_LINKS__
         </div>
     </div>
