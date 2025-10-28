@@ -23,3 +23,14 @@ Thumbs.db
 *.swp
 *.swo
 *~
+
+# Data backups
+*_backup.csv
+
+# Old standalone visualizations (no longer used)
+viz_*.py
+plugin_performance.html
+route_heatmap.html
+sankey_network_flow.html
+timeline_area.html
+timeline_lines.html

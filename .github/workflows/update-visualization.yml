@@ -1,11 +1,12 @@
-name: Update Visualization
+name: Update Dashboard
 
 on:
   push:
     branches: [ main ]
     paths:
-      - 'interop.csv'
-      - 'generate_visualization.py'
+      - 'interop_fresh.csv'
+      - 'create_dashboard.py'
+      - 'create_plugin_pages.py'
   workflow_dispatch:
 
 permissions:
@@ -26,15 +27,16 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install pandas plotly
+        pip install pandas plotly web3
 
-    - name: Generate visualization
+    - name: Generate dashboard
       run: |
-        python generate_visualization.py
+        python create_dashboard.py
+        python create_plugin_pages.py
 
     - name: Commit and push if changed
       run: |
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
-        git add index.html
-        git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update visualization from CSV" && git push)
+        git add index.html plugins/
+        git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update dashboard from CSV" && git push)

@@ -1,0 +1,19 @@
+{
+  "base:0x6985884c4392d348587b19cb9eaaf157f13271cd": "ZRO",
+  "ethereum:0x8e1c6992621f1f647c79a297035b5484b9fb6864": "?",
+  "optimism:0x0bbea6812fb3fcbca126edb558e551b3f1702026": "?",
+  "arbitrum:0x912ce59144191c1204e64559fe8253a0e49e6548": "ARB",
+  "arbitrum:0xc08cd26474722ce93f4d0c34d16201461c10aa8c": "CARV",
+  "ethereum:0xdac17f958d2ee523a2206206994597c13d831ec7": "USDT",
+  "arbitrum:0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9": "USD\u20ae0",
+  "arbitrum:0x14e4a1b13bf7f943c8ff7c51fb60fa964a298d92": "?",
+  "base:0xfde4c96c8593536e31f229ea8f37b2ada2699bb2": "USDT",
+  "optimism:0x0b2c639c533813f4aa9d7837caf62653d097ff85": "USDC",
+  "ethereum:0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": "USDC",
+  "arbitrum:0x82af49447d8a07e3bd95bd0d56f35241523fbab1": "WETH",
+  "arbitrum:0xaf88d065e77c8cc2239327c5edb3a432268e5831": "USDC",
+  "ethereum:0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": "WETH",
+  "base:0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "USDC",
+  "base:0x306acd0c07c430abbbb2e74ef7bde94f32a898c0": "SEDA",
+  "optimism:0x4200000000000000000000000000000000000042": "OP"
+}
