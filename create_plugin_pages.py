@@ -819,8 +819,19 @@ def create_plugin_page(plugin_name, df, all_plugins):
     net_values = list(net_flows_sorted.values())
     colors_net = [COLOR_POSITIVE if v > 0 else 'rgba(239, 85, 59, 0.8)' for v in net_values]
 
-    # Text labels outside bars
-    text_labels = [f"${abs(v)/1e3:.0f}K" if abs(v) >= 1000 else f"${abs(v):.0f}" for v in net_values]
+    # Format text labels to be shorter
+    text_labels = []
+    for v in net_values:
+        if abs(v) >= 1e6:
+            text_labels.append(f"${v/1e6:.2f}M")
+        elif abs(v) >= 1e3:
+            text_labels.append(f"${v/1e3:.0f}K")
+        else:
+            text_labels.append(f"${v:.0f}")
+
+    # Calculate appropriate x-axis range
+    max_val = max(abs(v) for v in net_values) if net_values else 1
+    x_range = [-max_val * 1.15, max_val * 1.15]  # 15% padding for text labels
 
     fig_net_flows = go.Figure(data=[go.Bar(
         y=chains,
@@ -844,17 +855,16 @@ def create_plugin_page(plugin_name, df, all_plugins):
             zerolinecolor='rgba(255, 255, 255, 0.3)',
             zerolinewidth=2,
             fixedrange=False,
-            automargin=True
+            range=x_range
         ),
         yaxis=dict(
             title='',
             color=TEXT_COLOR,
             tickfont=dict(size=FONT_SIZE_AXIS),
-            automargin=True,
             ticksuffix="        "
         ),
-        height=300,
-        margin=dict(l=100, r=120, t=60, b=50, pad=10, autoexpand=True),
+        height=400,
+        margin=dict(l=100, r=20, t=30, b=50),
         paper_bgcolor=CARD_BG,
         plot_bgcolor=CARD_BG,
         showlegend=False,

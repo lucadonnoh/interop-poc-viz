@@ -592,6 +592,10 @@ for v in net_values:
     else:
         text_labels.append(f"${v:.0f}")
 
+# Calculate appropriate x-axis range
+max_val = max(abs(v) for v in net_values)
+x_range = [-max_val * 1.15, max_val * 1.15]  # 15% padding for text labels
+
 fig_net_flows = go.Figure(data=[go.Bar(
     y=chains_ordered,
     x=net_values,
@@ -614,17 +618,16 @@ fig_net_flows.update_layout(
         zerolinecolor='rgba(255, 255, 255, 0.3)',
         zerolinewidth=2,
         fixedrange=False,
-        automargin=True
+        range=x_range
     ),
     yaxis=dict(
         title='',
         color=TEXT_COLOR,
         tickfont=dict(size=FONT_SIZE_AXIS),
-        automargin=True,
         ticksuffix="        "  # Add spacing after y-axis labels to prevent overlap with bar text
     ),
-    height=300,
-    margin=dict(l=100, r=120, t=30, b=50, pad=10, autoexpand=True),
+    height=400,
+    margin=dict(l=100, r=20, t=30, b=50),
     paper_bgcolor=CARD_BG,
     plot_bgcolor=CARD_BG,
     showlegend=False,
