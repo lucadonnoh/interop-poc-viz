@@ -860,10 +860,21 @@ print(f"  Chain token flow: {len(top_token_symbols)} tokens across {len(all_chai
 print("Creating missing data chart...")
 df_missing = df[df['srcAbstractTokenId'].isna()].copy()
 
-# Top protocols with missing data
+# Top protocols with missing data - calculate percentages
 missing_by_protocol = df_missing.groupby('plugin').size().reset_index(name='missing_transfers')
-missing_by_protocol = missing_by_protocol.sort_values('missing_transfers', ascending=False).head(10)
-missing_by_protocol = missing_by_protocol.sort_values('missing_transfers', ascending=True)  # Sort for display (low to high)
+
+# Calculate total transfers per protocol
+total_by_protocol = df.groupby('plugin').size().reset_index(name='total_transfers')
+
+# Merge to get both missing and total
+missing_by_protocol = missing_by_protocol.merge(total_by_protocol, on='plugin', how='left')
+
+# Calculate percentage
+missing_by_protocol['missing_pct'] = (missing_by_protocol['missing_transfers'] / missing_by_protocol['total_transfers']) * 100
+
+# Sort by percentage (highest first), then take top 10
+missing_by_protocol = missing_by_protocol.sort_values('missing_pct', ascending=False).head(10)
+missing_by_protocol = missing_by_protocol.sort_values('missing_pct', ascending=True)  # Sort for display (low to high)
 
 # Top token addresses needing abstractTokenId mapping (exclude native ETH and predeploys)
 missing_tokens_raw = df_missing.groupby(['srcTokenAddress', 'srcChain']).size().reset_index(name='transfers')
@@ -991,10 +1002,11 @@ fig_missing = make_subplots(
 fig_missing.add_trace(
     go.Bar(
         y=missing_by_protocol['plugin'].tolist(),
-        x=missing_by_protocol['missing_transfers'].tolist(),
+        x=missing_by_protocol['missing_pct'].tolist(),
         orientation='h',
         marker=dict(color=COLOR_NEGATIVE),
-        hovertemplate='<b>%{y}</b><br>Missing: %{x:,} transfers<extra></extra>',
+        customdata=missing_by_protocol['missing_transfers'].tolist(),
+        hovertemplate='<b>%{y}</b><br>Missing: %{x:.1f}%<br>Count: %{customdata:,} transfers<extra></extra>',
         showlegend=False
     ),
     row=1, col=1
@@ -1013,7 +1025,7 @@ fig_missing.add_trace(
     row=1, col=2
 )
 
-fig_missing.update_xaxes(title_text="Transfers Without Abstract Token ID", row=1, col=1, gridcolor=GRID_COLOR, color=TEXT_COLOR)
+fig_missing.update_xaxes(title_text="% of Protocol's Transfers Missing Abstract Token ID", row=1, col=1, gridcolor=GRID_COLOR, color=TEXT_COLOR)
 fig_missing.update_xaxes(title_text="Transfers Needing Mapping", row=1, col=2, gridcolor=GRID_COLOR, color=TEXT_COLOR)
 fig_missing.update_yaxes(tickfont=dict(size=FONT_SIZE_AXIS), color=TEXT_COLOR, automargin=True, row=1, col=1)
 fig_missing.update_yaxes(tickfont=dict(size=FONT_SIZE_ANNOTATION), color=TEXT_COLOR, automargin=True, row=1, col=2)
@@ -1037,7 +1049,7 @@ fig_missing.update_layout(
     )
 )
 
-print(f"  Missing data: {missing_transfers:,} transfers ({100-coverage_pct:.1f}%), top issues: {missing_by_protocol.iloc[-1]['plugin']} ({missing_by_protocol.iloc[-1]['missing_transfers']:,}), {missing_by_protocol.iloc[-2]['plugin']} ({missing_by_protocol.iloc[-2]['missing_transfers']:,})")
+print(f"  Missing data: {missing_transfers:,} transfers ({100-coverage_pct:.1f}%), top issues by %: {missing_by_protocol.iloc[-1]['plugin']} ({missing_by_protocol.iloc[-1]['missing_pct']:.1f}%), {missing_by_protocol.iloc[-2]['plugin']} ({missing_by_protocol.iloc[-2]['missing_pct']:.1f}%)")
 
 # ========== 9. TRANSFER VALUE DISTRIBUTION ==========
 print("Creating transfer value distribution...")
