@@ -15,5 +15,15 @@
   "ethereum:0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": "WETH",
   "base:0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "USDC",
   "base:0x306acd0c07c430abbbb2e74ef7bde94f32a898c0": "SEDA",
-  "optimism:0x4200000000000000000000000000000000000042": "OP"
+  "optimism:0x4200000000000000000000000000000000000042": "OP",
+  "arbitrum:0x37a645648df29205c6261289983fb04ecd70b4b3": "ANIME",
+  "base:0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": "cbBTC",
+  "ethereum:0xfa1c09fc8b491b6a4d3ff53a10cad29381b3f949": "FF",
+  "base:0x3cc0d3ecc81ba57abf3494abc8d4cb0a43410b07": "GM",
+  "base:0xc9d23ed2adb0f551369946bd377f8644ce1ca5c4": "HYPER",
+  "base:0x88fb150bdc53a65fe94dea0c9ba0a6daf8c6e196": "LINK",
+  "base:0x3792dbdd07e87413247df995e692806aa13d3299": "OMI",
+  "ethereum:0xe2ad0bf751834f2fbdc62a41014f84d67ca1de2a": "ERA",
+  "ethereum:0x4c9edd5852cd905f086c759e8383e09bff1e68b3": "USDe",
+  "ethereum:0xed35af169af46a02ee13b9d79eb57d6d68c1749e": "OMI"
 }

@@ -140,17 +140,48 @@ def create_plugin_page(plugin_name, df, all_plugins):
 
     flow_data_usd = df_flow_usd.groupby(['srcChain', 'dstChain', 'token_symbol'])['srcValueUsd'].sum().reset_index(name='volume')
 
-    # Get top tokens for color assignment with opacity
+    # Create temporary global token order for this plugin (before the main one is created)
+    temp_token_stats = plugin_df.dropna(subset=['srcAbstractTokenId']).groupby('srcAbstractTokenId').size().reset_index(name='count')
+    temp_token_stats['symbol'] = temp_token_stats['srcAbstractTokenId'].str.split(':').str[-1]
+    temp_token_stats = temp_token_stats.sort_values('count', ascending=False)
+    temp_token_order = temp_token_stats['symbol'].tolist()
+
+    # Define brand-accurate colors for tokens (same as scatter plot/breakdown)
+    TOKEN_BRAND_COLORS_SANKEY = {
+        'USDC': 'rgba(60, 145, 230, 0.5)',      # USDC Blue (brighter)
+        'ETH': 'rgba(150, 100, 255, 0.5)',      # Ethereum Purple (more purple, less blue)
+        'USDT': 'rgba(50, 175, 135, 0.5)',      # Tether Green (brighter)
+        'USDT0': 'rgba(70, 200, 160, 0.5)',     # Tether Green lighter (brighter)
+        'WBTC': 'rgba(247, 147, 26, 0.5)',      # Bitcoin Orange
+        'DAI': 'rgba(255, 184, 77, 0.5)',       # DAI Gold/Yellow
+        'ZRO': 'rgba(170, 140, 255, 0.5)',      # LayerZero Purple (brighter)
+        'SNX': 'rgba(0, 209, 255, 0.5)',        # Synthetix Cyan
+        'POOL': 'rgba(100, 70, 160, 0.5)',      # PoolTogether Purple (brighter)
+        'ACX': 'rgba(255, 88, 88, 0.5)',        # Across Red
+        'WLD': 'rgba(80, 80, 80, 0.5)',         # Worldcoin Gray (brighter)
+        'VLR': 'rgba(120, 220, 180, 0.5)',      # Generic teal
+    }
+    sankey_fallback_palette = px.colors.qualitative.Set3
+
+    def get_sankey_token_color(token_symbol, index_fallback):
+        """Get color for a token in sankey - use brand color with lower opacity"""
+        if token_symbol in TOKEN_BRAND_COLORS_SANKEY:
+            return TOKEN_BRAND_COLORS_SANKEY[token_symbol]
+        else:
+            # Convert Set3 color to rgba with lower opacity
+            base_color = sankey_fallback_palette[index_fallback % len(sankey_fallback_palette)]
+            if base_color.startswith('rgb('):
+                return base_color.replace('rgb(', 'rgba(').replace(')', ', 0.5)')
+            return base_color
+
+    # Get top tokens and assign colors
     token_colors = {}
     top_tokens = df_flow_usd.groupby('token_symbol')['srcValueUsd'].sum().nlargest(10)
-    color_palette = [
-        'rgba(141, 211, 199, 0.4)', 'rgba(255, 255, 179, 0.4)', 'rgba(190, 186, 218, 0.4)',
-        'rgba(251, 128, 114, 0.4)', 'rgba(128, 177, 211, 0.4)', 'rgba(253, 180, 98, 0.4)',
-        'rgba(179, 222, 105, 0.4)', 'rgba(252, 205, 229, 0.4)', 'rgba(217, 217, 217, 0.4)',
-        'rgba(188, 128, 189, 0.4)'
-    ]
-    for i, token in enumerate(top_tokens.index):
-        token_colors[token] = color_palette[i % len(color_palette)]
+    for token in top_tokens.index:
+        if token in temp_token_order:
+            token_colors[token] = get_sankey_token_color(token, temp_token_order.index(token))
+        else:
+            token_colors[token] = 'rgba(128, 128, 128, 0.3)'
     default_color = 'rgba(128, 128, 128, 0.3)'
 
     sources_usd, targets_usd, values_usd, colors_usd, labels_usd = [], [], [], [], []
@@ -232,25 +263,118 @@ def create_plugin_page(plugin_name, df, all_plugins):
         annotations=legend_annotations
     )
 
+    # ========== Create Global Token Order (for consistent colors across charts) ==========
+    # This will be used by both scatter plot and token breakdown to ensure consistent colors
+    global_token_stats = plugin_df.dropna(subset=['srcAbstractTokenId']).groupby('srcAbstractTokenId').size().reset_index(name='count')
+    global_token_stats['symbol'] = global_token_stats['srcAbstractTokenId'].str.split(':').str[-1]
+    global_token_stats = global_token_stats.sort_values('count', ascending=False)
+    global_token_order = global_token_stats['symbol'].tolist()
+
+    # Define brand-accurate colors for major tokens
+    TOKEN_BRAND_COLORS = {
+        'USDC': 'rgba(60, 145, 230, 0.8)',      # USDC Blue (brighter)
+        'ETH': 'rgba(150, 100, 255, 0.8)',      # Ethereum Purple (more purple, less blue)
+        'USDT': 'rgba(50, 175, 135, 0.8)',      # Tether Green (slightly brighter)
+        'USDT0': 'rgba(70, 200, 160, 0.8)',     # Tether Green lighter variant (brighter)
+        'WBTC': 'rgba(247, 147, 26, 0.8)',      # Bitcoin Orange
+        'DAI': 'rgba(255, 184, 77, 0.8)',       # DAI Gold/Yellow
+        'ZRO': 'rgba(170, 140, 255, 0.8)',      # LayerZero Purple (brighter)
+        'SNX': 'rgba(0, 209, 255, 0.8)',        # Synthetix Cyan
+        'POOL': 'rgba(100, 70, 160, 0.8)',      # PoolTogether Purple (brighter)
+        'ACX': 'rgba(255, 88, 88, 0.8)',        # Across Red
+        'WLD': 'rgba(80, 80, 80, 0.8)',         # Worldcoin Gray (brighter)
+        'VLR': 'rgba(120, 220, 180, 0.8)',      # Generic teal/cyan-green
+    }
+
+    # Fallback palette for tokens not in the brand colors dict
+    token_color_palette_fallback = px.colors.qualitative.Set3
+
+    def get_token_color(token_symbol, index_fallback):
+        """Get color for a token - use brand color if available, otherwise use palette"""
+        if token_symbol in TOKEN_BRAND_COLORS:
+            return TOKEN_BRAND_COLORS[token_symbol]
+        else:
+            return token_color_palette_fallback[index_fallback % len(token_color_palette_fallback)]
+
     # ========== CHART 1: Duration vs Size Scatter ==========
-    scatter_df = plugin_df.dropna(subset=['srcValueUsd', 'duration'])
+    scatter_df = plugin_df.dropna(subset=['srcValueUsd', 'duration']).copy()
+
+    # Extract token symbol from srcAbstractTokenId
+    scatter_df['token_symbol'] = scatter_df['srcAbstractTokenId'].apply(
+        lambda x: x.split(':')[-1] if pd.notna(x) else 'Unknown'
+    )
+
+    # Prepare custom data for hover with dynamic decimal places
+    def format_amount(x):
+        if pd.isna(x):
+            return 'N/A'
+        if x >= 1:
+            return f"{x:,.2f}"  # 2 decimals for amounts >= 1
+        elif x >= 0.01:
+            return f"{x:,.4f}"  # 4 decimals for amounts >= 0.01
+        elif x > 0:
+            return f"{x:,.8f}"  # 8 decimals for very small amounts
+        else:
+            return '0'
+
+    def format_duration(seconds):
+        if pd.isna(seconds):
+            return 'N/A'
+        if seconds < 60:
+            return f"{seconds:.1f}s"
+        elif seconds < 3600:
+            # Show minutes and seconds
+            mins = int(seconds // 60)
+            secs = int(seconds % 60)
+            return f"{mins}m {secs}s"
+        elif seconds < 86400:
+            # Show hours and minutes
+            hours = int(seconds // 3600)
+            mins = int((seconds % 3600) // 60)
+            return f"{hours}h {mins}m"
+        else:
+            # Show days and hours
+            days = int(seconds // 86400)
+            hours = int((seconds % 86400) // 3600)
+            return f"{days}d {hours}h"
+
+    scatter_df['srcAmount_display'] = scatter_df['srcAmount'].apply(format_amount)
+    scatter_df['duration_display'] = scatter_df['duration'].apply(format_duration)
 
     fig_duration_vs_size = go.Figure()
 
     if len(scatter_df) > 0:
-        fig_duration_vs_size.add_trace(go.Scatter(
-            x=scatter_df['srcValueUsd'].tolist(),
-            y=scatter_df['duration'].tolist(),
-            mode='markers',
-            marker=dict(
-                size=5,
-                color=ACCENT_COLOR,
-                opacity=0.4,
-                line=dict(width=0)
-            ),
-            hovertemplate='<b>Transfer</b><br>Value: $%{x:,.0f}<br>Duration: %{y:.1f}s<extra></extra>',
-            showlegend=False
-        ))
+        # Get unique tokens in scatter data, but order them according to global token order
+        scatter_tokens_set = set(scatter_df['token_symbol'].unique())
+        unique_tokens = [token for token in global_token_order if token in scatter_tokens_set]
+
+        # Assign colors using brand colors or fallback palette
+        token_colors = {token: get_token_color(token, global_token_order.index(token))
+                       for token in unique_tokens}
+
+        # Create one trace per token
+        for token in unique_tokens:
+            token_data = scatter_df[scatter_df['token_symbol'] == token]
+
+            fig_duration_vs_size.add_trace(go.Scatter(
+                x=token_data['srcValueUsd'].tolist(),
+                y=token_data['duration'].tolist(),
+                mode='markers',
+                name=token,
+                marker=dict(
+                    size=5,
+                    color=token_colors[token],
+                    opacity=0.6,
+                    line=dict(width=0)
+                ),
+                customdata=list(zip(
+                    token_data['srcAmount_display'].tolist(),
+                    token_data['token_symbol'].tolist(),
+                    token_data['duration_display'].tolist()
+                )),
+                hovertemplate='<b>Transfer</b><br>Value: $%{x:,.0f}<br>Duration: %{customdata[2]}<br>Amount: %{customdata[0]} %{customdata[1]}<extra></extra>',
+                showlegend=True
+            ))
 
         # Add trend line (in log-log space)
         if len(scatter_df) > 10:
@@ -281,7 +405,8 @@ def create_plugin_page(plugin_name, df, all_plugins):
                         mode='lines',
                         line=dict(color='rgba(255, 107, 107, 0.8)', width=2, dash='dash'),
                         name='Trend',
-                        hoverinfo='skip'
+                        hoverinfo='skip',
+                        showlegend=False
                     ))
             except (np.linalg.LinAlgError, ValueError):
                 # Skip trend line if fitting fails
@@ -302,10 +427,19 @@ def create_plugin_page(plugin_name, df, all_plugins):
             color=TEXT_COLOR
         ),
         height=400,
-        margin=dict(l=60, r=20, t=80, b=60),
+        margin=dict(l=60, r=120, t=80, b=60),
         paper_bgcolor=CARD_BG,
         plot_bgcolor=CARD_BG,
         hovermode='closest',
+        showlegend=True,
+        legend=dict(
+            font=dict(size=FONT_SIZE_LEGEND),
+            orientation='v',
+            x=1.02,
+            y=1,
+            xanchor='left',
+            yanchor='top'
+        ),
         title=dict(
             text=f'TRANSFER DURATION VS SIZE<br><sub>Does transfer size affect speed?</sub>',
             font=dict(size=FONT_SIZE_TITLE, color=TEXT_COLOR),
@@ -500,39 +634,49 @@ def create_plugin_page(plugin_name, df, all_plugins):
     )
 
     if len(token_stats) > 0:
-        # Left: Transfer count
+        # Left: Transfer count - create explicit color mapping
         count_labels = tokens_count_main['symbol'].tolist()
         count_values = tokens_count_main['count'].tolist()
+
+        # Create explicit color list based on brand colors or global token order
+        count_colors = [get_token_color(label, global_token_order.index(label))
+                       for label in count_labels]
 
         if len(tokens_count_other) > 0:
             count_labels.append('Other')
             count_values.append(tokens_count_other['count'].sum())
+            count_colors.append('rgba(200, 200, 200, 0.8)')  # Gray for "Other"
 
         fig_token_breakdown.add_trace(go.Pie(
             labels=count_labels,
             values=count_values,
             hole=0.4,
-            marker=dict(colors=px.colors.qualitative.Set3),
+            marker=dict(colors=count_colors),
             textinfo='label+percent',
-            textfont=dict(size=FONT_SIZE_AXIS),
+            textfont=dict(size=FONT_SIZE_AXIS, color='white'),
             hovertemplate='<b>%{label}</b><br>%{value:,} transfers<br>%{percent}<extra></extra>'
         ), row=1, col=1)
 
-        # Right: USD volume
+        # Right: USD volume - create explicit color mapping
         volume_labels = tokens_volume_main['symbol'].tolist()
         volume_values = tokens_volume_main['volume'].tolist()
+
+        # Create explicit color list based on brand colors or global token order
+        volume_colors = [get_token_color(label, global_token_order.index(label))
+                        for label in volume_labels]
 
         if len(tokens_volume_other) > 0:
             volume_labels.append('Other')
             volume_values.append(tokens_volume_other['volume'].sum())
+            volume_colors.append('rgba(200, 200, 200, 0.8)')  # Gray for "Other"
 
         fig_token_breakdown.add_trace(go.Pie(
             labels=volume_labels,
             values=volume_values,
             hole=0.4,
-            marker=dict(colors=px.colors.qualitative.Set3),
+            marker=dict(colors=volume_colors),
             textinfo='label+percent',
-            textfont=dict(size=FONT_SIZE_AXIS),
+            textfont=dict(size=FONT_SIZE_AXIS, color='white'),
             hovertemplate='<b>%{label}</b><br>$%{value:,.0f}<br>%{percent}<extra></extra>'
         ), row=1, col=2)
 
@@ -978,7 +1122,7 @@ def create_plugin_page(plugin_name, df, all_plugins):
         </div>
 
         <div class="chart-container">
-            <div id="chart-route-heatmap"></div>
+            <div id="chart-net-flows"></div>
         </div>
 
         <div class="chart-container">
@@ -990,7 +1134,7 @@ def create_plugin_page(plugin_name, df, all_plugins):
         </div>
 
         <div class="chart-container">
-            <div id="chart-net-flows"></div>
+            <div id="chart-route-heatmap"></div>
         </div>
     </div>
 

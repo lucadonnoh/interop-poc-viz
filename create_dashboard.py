@@ -18,6 +18,38 @@ date_range = f"{df['timestamp'].min().strftime('%b %d %H:%M')} - {df['timestamp'
 
 print(f"Creating dashboard with {total_transfers:,} transfers...")
 
+# ========== Create Global Token Order (for consistent colors across all charts) ==========
+global_token_stats = df.dropna(subset=['srcAbstractTokenId']).groupby('srcAbstractTokenId').size().reset_index(name='count')
+global_token_stats['symbol'] = global_token_stats['srcAbstractTokenId'].str.split(':').str[-1]
+global_token_stats = global_token_stats.sort_values('count', ascending=False)
+global_token_order = global_token_stats['symbol'].tolist()
+
+# Define brand-accurate colors for major tokens
+TOKEN_BRAND_COLORS = {
+    'USDC': 'rgba(60, 145, 230, 0.8)',      # USDC Blue (brighter)
+    'ETH': 'rgba(150, 100, 255, 0.8)',      # Ethereum Purple (more purple, less blue)
+    'USDT': 'rgba(50, 175, 135, 0.8)',      # Tether Green (slightly brighter)
+    'USDT0': 'rgba(70, 200, 160, 0.8)',     # Tether Green lighter variant (brighter)
+    'WBTC': 'rgba(247, 147, 26, 0.8)',      # Bitcoin Orange
+    'DAI': 'rgba(255, 184, 77, 0.8)',       # DAI Gold/Yellow
+    'ZRO': 'rgba(170, 140, 255, 0.8)',      # LayerZero Purple (brighter)
+    'SNX': 'rgba(0, 209, 255, 0.8)',        # Synthetix Cyan
+    'POOL': 'rgba(100, 70, 160, 0.8)',      # PoolTogether Purple (brighter)
+    'ACX': 'rgba(255, 88, 88, 0.8)',        # Across Red
+    'WLD': 'rgba(80, 80, 80, 0.8)',         # Worldcoin Gray (brighter)
+    'VLR': 'rgba(120, 220, 180, 0.8)',      # Generic teal/cyan-green
+}
+
+# Fallback palette for tokens not in the brand colors dict
+token_color_palette = px.colors.qualitative.Set3
+
+def get_token_color(token_symbol, index_fallback):
+    """Get color for a token - use brand color if available, otherwise use palette"""
+    if token_symbol in TOKEN_BRAND_COLORS:
+        return TOKEN_BRAND_COLORS[token_symbol]
+    else:
+        return token_color_palette[index_fallback % len(token_color_palette)]
+
 # Dark theme colors
 DARK_BG = '#0a0e27'
 CARD_BG = '#111836'
@@ -718,6 +750,13 @@ for _, row in top_tokens.iterrows():
     # Scale by median transfer value (log scale for better distribution)
     bubble_size = min(50, max(10, 15 + math.log10(max(1, median_value)) * 5))
 
+    # Assign color based on brand colors or global token order
+    token_symbol = row['symbol']
+    if token_symbol in global_token_order:
+        token_color = get_token_color(token_symbol, global_token_order.index(token_symbol))
+    else:
+        token_color = 'rgba(128, 128, 128, 0.7)'  # Gray for unknown tokens
+
     fig_tokens.add_trace(go.Scatter(
         x=[row['transfer_count']],
         y=[row['total_usd']],
@@ -725,6 +764,7 @@ for _, row in top_tokens.iterrows():
         name=row['symbol'],
         marker=dict(
             size=bubble_size,
+            color=token_color,
             opacity=0.7,
             line=dict(width=2, color=TEXT_COLOR)
         ),
@@ -768,7 +808,10 @@ fig_tokens.update_layout(
     )
 )
 
-print(f"  Token overview: {len(top_tokens)} tokens, USDC leads with {top_tokens.iloc[0]['transfer_count']:,} transfers")
+if len(top_tokens) > 0:
+    print(f"  Token overview: {len(top_tokens)} tokens, {top_tokens.iloc[0]['symbol']} leads with {top_tokens.iloc[0]['transfer_count']:,} transfers")
+else:
+    print(f"  Token overview: No tokens with valid srcSymbol data")
 
 # ========== 7B. PER-CHAIN TOKEN FLOW ==========
 print("Creating per-chain token flow...")
@@ -776,8 +819,8 @@ chain_token_stats = df.dropna(subset=['srcChain', 'srcAbstractTokenId']).copy()
 chain_token_stats['symbol'] = chain_token_stats['srcAbstractTokenId'].str.split(':').str[-1]
 chain_token_counts = chain_token_stats.groupby(['srcChain', 'symbol']).size().reset_index(name='count')
 
-# Get top 6 tokens overall
-top_token_symbols = chain_token_stats['symbol'].value_counts().head(6).index.tolist()
+# Get top 6 tokens overall (use global token order)
+top_token_symbols = [token for token in global_token_order if token in chain_token_stats['symbol'].values][:6]
 
 fig_chain_tokens = go.Figure()
 
@@ -787,10 +830,14 @@ for token in top_token_symbols:
         count = chain_token_counts[(chain_token_counts['srcChain'] == chain) & (chain_token_counts['symbol'] == token)]['count'].sum()
         token_data.append(count)
 
+    # Assign color based on brand colors or global token order
+    token_color = get_token_color(token, global_token_order.index(token))
+
     fig_chain_tokens.add_trace(go.Bar(
         name=token,
         x=all_chains,
         y=token_data,
+        marker=dict(color=token_color),
         hovertemplate=f'<b>{token}</b><br>%{{x}}: %{{y:,}} transfers<extra></extra>'
     ))
 
@@ -1101,7 +1148,10 @@ fastest_plugin = plugin_stats.nsmallest(1, 'avg_duration_sec').iloc[0]
 df_with_values = df.dropna(subset=['srcValueUsd'])
 total_volume_usd = df_with_values['srcValueUsd'].sum()
 median_transfer = df_with_values['srcValueUsd'].median()
-top_token = token_stats.nlargest(1, 'transfer_count').iloc[0]
+if len(token_stats) > 0:
+    top_token = token_stats.nlargest(1, 'transfer_count').iloc[0]
+else:
+    top_token = {'symbol': 'N/A', 'transfer_count': 0}
 
 # Net flow winner
 net_flow_winner = max(net_flows_sorted.items(), key=lambda x: x[1])
@@ -1355,7 +1405,7 @@ html_content = f"""<!DOCTYPE html>
         </div>
 
         <div class="chart-container">
-            <div id="chart-heatmap"></div>
+            <div id="chart-net-flows"></div>
         </div>
 
         <div class="chart-container">
@@ -1371,7 +1421,7 @@ html_content = f"""<!DOCTYPE html>
         </div>
 
         <div class="chart-container">
-            <div id="chart-net-flows"></div>
+            <div id="chart-heatmap"></div>
         </div>
 
         <div class="chart-container">
