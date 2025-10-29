@@ -682,13 +682,18 @@ legend_ranks = {
 }
 for size in size_order:
     if size in protocol_size_pct.columns:
+        # Get raw counts for tooltip
+        raw_counts = [protocol_size_dist.loc[protocol, size] if size in protocol_size_dist.columns else 0
+                     for protocol in protocol_size_pct.index]
+
         fig_protocol_size.add_trace(go.Bar(
             name=size,
             y=protocol_size_pct.index.tolist(),
             x=protocol_size_pct[size].tolist(),
             orientation='h',
             marker=dict(color=SIZE_COLORS[size]),
-            hovertemplate='<b>%{y}</b><br>' + size + ': %{x:.1f}%<extra></extra>',
+            customdata=raw_counts,
+            hovertemplate='<b>%{y}</b><br>' + size + ': %{x:.1f}%<br>Count: %{customdata:,} transfers<extra></extra>',
             legendrank=legend_ranks[size]
         ))
 
