@@ -25,5 +25,12 @@
   "base:0x3792dbdd07e87413247df995e692806aa13d3299": "OMI",
   "ethereum:0xe2ad0bf751834f2fbdc62a41014f84d67ca1de2a": "ERA",
   "ethereum:0x4c9edd5852cd905f086c759e8383e09bff1e68b3": "USDe",
-  "ethereum:0xed35af169af46a02ee13b9d79eb57d6d68c1749e": "OMI"
+  "ethereum:0xed35af169af46a02ee13b9d79eb57d6d68c1749e": "OMI",
+  "base:0x1111111111166b7fe7bd91427724b487980afc69": "ZORA",
+  "ethereum:0x5f64ab1544d28732f0a24f4713c2c8ec0da089f0": "DEXTF",
+  "base:0x5d3a1ff2b6bab83b63cd9ad0787074081a52ef34": "USDe",
+  "base:0x46777c76dbbe40fabb2aab99e33ce20058e76c59": "L3",
+  "arbitrum:0x5d3a1ff2b6bab83b63cd9ad0787074081a52ef34": "USDe",
+  "base:0xf732a566121fa6362e9e0fbdd6d66e5c8c925e49": "LITKEY",
+  "base:0x211cc4dd073734da055fbf44a2b4667d5e5fe5d2": "sUSDe"
 }
